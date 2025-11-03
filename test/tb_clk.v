@@ -3,12 +3,9 @@
 module tb_clock;
 
 reg sysclk;
-reg clk;
 wire clken;
-wire clken2;
+wire clken2;  // out-of-phase clock enable
 wire slowclk;
-wire rise, fall;
-integer count;
 
 localparam CLKLEN = 8;
 
@@ -28,8 +25,6 @@ initial begin
   $dumpfile("top_tb.vcd");
   $dumpvars;
   sysclk = 0;
-  count = 0;
-  clk = 0;
   #100;
   $finish;
 end

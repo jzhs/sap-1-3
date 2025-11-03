@@ -58,12 +58,13 @@ memory
 mem (
   .sysclk(sysclk),
   .clken(clken_oop),
+  .reset(fp_clear),
   .write(fp_write),
   .adr((fp_prog) ?  fp_adr : mar_value),
   .data_in(fp_data),
   .value(mem_value) );
 
-assign w_bus = mem_en ? mem_value : 8'bZZZZZZZZ;
+assign w_bus = (mem_en | fp_prog) ? mem_value : 8'bZZZZZZZZ;
 
 
 wire ir_en;
@@ -136,8 +137,8 @@ assign o_out = o_value;
 //// Control unit
 
 wire [3:0] opcode = ir_value[7:4];
-wire hlt = (opcode == 4'b1111);
-assign halt = hlt;
+assign halt = (opcode == 4'b1111);
+
 // Twelve control signals
 wire [11:0] cword;
 

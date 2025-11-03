@@ -1,11 +1,12 @@
 // A 16-byte memory. It is initialized with a simple program
 // that produces the output 0x1C on the LEDs. 
 
-`default_nettype none 
+`default_nettype none
 
 module memory(
   input wire sysclk,
   input wire clken,
+  input wire reset,
   input wire write,
   input	wire [3:0] adr,
   input	wire [7:0] data_in,
@@ -15,7 +16,8 @@ module memory(
 reg [7:0] mem [0:15];
 
 
-initial begin 
+always @(posedge sysclk or posedge reset)
+if (reset) begin
   mem[0] = 8'b0000_1001;  // LDA 0x09   0x09     Acc = 0x0f
   mem[1] = 8'b0001_1010;  // ADA 0x0A   0x1a     Acc = 1d
   mem[2] = 8'b0010_1011;  // SUB 0x0B   0x2b     Acc = 1c
@@ -28,16 +30,15 @@ initial begin
   mem[9] = 8'b00001111;   // 0x0F
   mem[10] = 8'b00001110;  // 0x0E
   mem[11] = 8'b00000001;  // 0x01  
-end
-
-always @(posedge sysclk) 
-begin
+ 
+end else begin
   if (clken) begin
    if (write) begin
-     mem[adr] <= data_in;   
-   end
+     mem[adr] <= data_in;
+     value <= data_in;
+   end else
+     value <= mem[adr];
   end
-  value <= mem[adr];
 end
 
 endmodule

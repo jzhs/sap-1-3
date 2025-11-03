@@ -5,7 +5,7 @@ module top(
   input wire btnC,  // Write
   input wire btnL,  // Clear
   input wire btnR,  // Step
-  //input wire btnU,
+  input wire btnU,
   input wire btnD,
   output wire [15:0] LED, // the sixteen LEDs
   output wire [6:0] SEG,
@@ -19,9 +19,8 @@ wire CLOCK_1KHZ;
 wire CLR;
 wire CLOCK_MANUAL; // Manual clock (single step)
              // Malvino C25 input pin 2
-
+wire [7:0] bus;
 wire WRITE;
-//wire clk;
 wire hlt;
 wire clken_1khz;
 wire clken_1khz_oop; // out of phase
@@ -83,20 +82,47 @@ readwrite_deb(
   .out(WRITE) );
 
 reg [3:0] ADDR;
-wire NEXTADR;
+wire NEXTUP, NEXTDOWN;
 debounce
 nextadr_deb(
   .clock(CLOCK_100MHZ),
   .clken(clken_1khz),
   .in(btnD),
-  .out_rise(NEXTADR) );
+  .out_rise(NEXTUP),
+  .out_fall(NEXTDOWN) );
 
+wire PREVUP, PREVDOWN;
+debounce
+prevadr_deb(
+  .clock(CLOCK_100MHZ),
+  .clken(clken_1khz),
+  .in(btnU),
+  .out_rise(PREVUP),
+  .out_fall(PREVDOWN) );
+
+
+reg [7:0] pad_byte;
 
 always @(posedge CLOCK_100MHZ or posedge CLR)
   if (CLR)
      ADDR <= SW[11:8];
-  else if (NEXTADR)
-     ADDR <= ADDR + 1;
+  else if (NEXTUP)
+  begin
+     ADDR = ADDR + 1;
+  end
+  else if (PREVUP)
+  begin
+     ADDR = ADDR - 1;
+  end
+
+
+//assign LED[15:0] = {ADDR[3:0], 4'b0, pad_byte};
+//assign LED[7:0] = bus[7:0];
+//assign LED[15:8] = pad_byte[7:0];
+
+//assign LED[13] = SAP.mem.write;
+//assign LED[7:0] = SAP.mem.data_in[7:0];
+
 
 hexout 
 display(
@@ -108,6 +134,7 @@ display(
   .an(AN),
   .dp(DP)
 ); 
+  
 
 reg RUN;
 
@@ -144,19 +171,33 @@ keypress_deb(
   .out_fall(keyrelease) );
   
 
-reg [8:0] pad_byte;
-
 always @(posedge CLOCK_100MHZ or posedge CLR)
   if (CLR) begin
-     pad_byte <= 8'b0;
-  end else 
-  begin
+     pad_byte <= bus;
+  end else if (NEXTDOWN | PREVDOWN)
+     pad_byte <= bus;
+  else begin
      if (keypress)
      case (pad_value)
        16'b1000_0000_0000_0000: pad_byte <= {pad_byte[3:0], 4'b0001}; // 1
        16'b0000_1000_0000_0000: pad_byte <= {pad_byte[3:0], 4'b0100}; // 4
        16'b0000_0000_1000_0000: pad_byte <= {pad_byte[3:0], 4'b0111}; // 7
        16'b0000_0000_0000_1000: pad_byte <= {pad_byte[3:0], 4'b0000}; // 0
+       16'b0100_0000_0000_0000: pad_byte <= {pad_byte[3:0], 4'b0010}; // 2
+       16'b0000_0100_0000_0000: pad_byte <= {pad_byte[3:0], 4'b0101}; // 5
+       16'b0000_0000_0100_0000: pad_byte <= {pad_byte[3:0], 4'b1000}; // 8
+       16'b0000_0000_0000_0100: pad_byte <= {pad_byte[3:0], 4'b1111}; // F
+       
+       16'b0010_0000_0000_0000: pad_byte <= {pad_byte[3:0], 4'b0011}; // 3
+       16'b0000_0010_0000_0000: pad_byte <= {pad_byte[3:0], 4'b0110}; // 6
+       16'b0000_0000_0010_0000: pad_byte <= {pad_byte[3:0], 4'b1001}; // 9
+       16'b0000_0000_0000_0010: pad_byte <= {pad_byte[3:0], 4'b1110}; // E
+
+       16'b0001_0000_0000_0000: pad_byte <= {pad_byte[3:0], 4'b1010}; // A
+       16'b0000_0001_0000_0000: pad_byte <= {pad_byte[3:0], 4'b1011}; // B
+       16'b0000_0000_0001_0000: pad_byte <= {pad_byte[3:0], 4'b1100}; // C
+       16'b0000_0000_0000_0001: pad_byte <= {pad_byte[3:0], 4'b1101}; // D
+
        default: pad_byte <= pad_byte;
      endcase
   end
@@ -164,10 +205,16 @@ always @(posedge CLOCK_100MHZ or posedge CLR)
 
 wire clken, clken_oop;
 
-assign clken = ~hlt & ((clken_1khz & AUTO) | (man_clken & MANUAL));
-assign clken_oop = ~hlt & ((clken_1khz_oop & AUTO) | (man_clken_oop & MANUAL));
+assign clken = (clken_1khz & AUTO) | (man_clken & MANUAL);
+assign clken_oop = (clken_1khz_oop & AUTO) | (man_clken_oop & MANUAL);
 
 // Instantiate the sap1 core, connect to board 
+assign LED[15] = RUN;
+assign LED[14] = CLOCK_100MHZ;
+assign LED[13] = clock_1khz;
+
+
+
 
 sap1 SAP(
    .sysclk(CLOCK_100MHZ),
@@ -178,7 +225,8 @@ sap1 SAP(
    .halt(hlt),
    .fp_write(WRITE),
    .fp_adr(ADDR),
-   .fp_data(SW[7:0]),
+   .fp_data(pad_byte),
+   .w_bus(bus),
    //.o_out(LED[7:0]),
    .eo_sel(SW[13:12])
    //.extra_out(LED[15:8]) 
