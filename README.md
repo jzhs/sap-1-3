@@ -13,3 +13,13 @@ Press up/down pushbuttons to cycle through addresses.
 To edit enter new byte value on keypaed and press center push
 button. Moves automatically to next adr.
 
+
+
+# Timing Problem
+
+On reset there is a 16 cycle delay (debouncing) before MANUAL is asserted. During that time
+the clocken runs. This causes problems because we expect to be in single step mode
+immediately.
+
+For now I have removed the MANUAL debounce logic. Now powerup in step mode is OK. However, turning
+stepping on/off is now a potential issue.

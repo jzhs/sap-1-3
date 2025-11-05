@@ -25,6 +25,8 @@ module sap1(
 wire pc_en;
 wire pc_incr;
 wire [3:0] pc_value;
+wire [3:0] pc_next;
+assign pc_next = pc_value + 4'b1;
 
 newregister #(.size(4))
 pc(
@@ -32,7 +34,7 @@ pc(
   .clken(clken),
   .reset(fp_clear),
   .load(pc_incr),
-  .data_in(pc_value + 4'b0001),
+  .data_in(pc_next),
   .value(pc_value) );
 
 assign w_bus[7:0] = (pc_en) ? {4'bZZZZ, pc_value} : 8'bZZZZZZZZ;
@@ -127,7 +129,7 @@ wire [7:0] o_value;
 newregister o(
    .sysclk(sysclk),
    .clken(clken),
-   .reset(1'b0), // no reset
+   .reset(fp_clear), // no reset
    .load(o_load),
    .data_in(w_bus),
    .value(o_value) );
@@ -136,20 +138,22 @@ assign o_out = o_value;
 
 //// Control unit
 
-wire [3:0] opcode = ir_value[7:4];
-assign halt = (opcode == 4'b1111);
+//wire [3:0] opcode = ir_value[7:4];
+//assign halt = (opcode == 4'b1111);
 
 // Twelve control signals
 wire [11:0] cword;
 
 wire sub;
+
 controlunit control(
    .sysclk(sysclk),
    .clken(clken),
    .clken_oop(clken_oop),
    .clear(fp_clear),
    .ir(ir_value),
-   .cword(cword)
+   .cword(cword),
+   .halt(halt)
    );
 
 
@@ -167,13 +171,13 @@ assign o_load = cword[1];
 assign sub = cword[0];
 
 // Debug helper - set SW[13], SW[12] to get various extra output
-always @*
+always @(posedge sysclk)
 begin
     case (eo_sel)
-      2'b00 : extra_out <= {4'b0000, control.T};
-      2'b01 : extra_out <= {1'b0, 1'b0, 1'b0, 1'b0, pc_value};
+      2'b00 : extra_out <= {3'b000, control.T};
+      2'b01 : extra_out <= {4'b0000, pc_value};
       2'b10 : extra_out <= mem_value;
-      2'b11 : extra_out <=  {4'b0, fp_adr}; //{4'b000000, clken, clken_oop, halt, fp_clear};
+      2'b11 : extra_out <=  ir_value; //{4'b0, fp_adr}; //{4'b000000, clken, clken_oop, halt, fp_clear};
       default: 
         extra_out = 8'b00000000;
     endcase

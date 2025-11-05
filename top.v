@@ -14,8 +14,8 @@ module top(
   inout wire [7:0] JB // some are in, some are out
 );
 
+reg [7:0] encount;
 wire CLOCK_1KHZ;
-
 wire CLR;
 wire CLOCK_MANUAL; // Manual clock (single step)
              // Malvino C25 input pin 2
@@ -25,7 +25,16 @@ wire hlt;
 wire clken_1khz;
 wire clken_1khz_oop; // out of phase
 wire clock_1khz;
+wire clken, clken_oop;
+wire [7:0] extra_out;
 
+always @(posedge CLOCK_100MHZ or posedge CLR)
+  if (CLR)
+    encount <= 0;
+  else if (clken)
+    encount <= encount+1;
+    
+    
 clocken
 clockenable1(
   .sysclk(CLOCK_100MHZ),
@@ -35,13 +44,14 @@ clockenable1(
  
 
 wire MANUAL, AUTO;
-
-debounce
-manual_deb(
-  .clock(CLOCK_100MHZ),
-  .clken(clken_1khz),
-  .in(SW[15]),
-  .out(MANUAL) );
+assign MANUAL = SW[15];
+//debounce
+//manual_deb(
+//  .clock(CLOCK_100MHZ),
+//  .clken(clken_1khz),
+//  .reset(CLR),
+//  .in(SW[15]),
+//  .out(MANUAL) );
 
 assign AUTO = ~MANUAL;
 
@@ -52,6 +62,7 @@ debounce
 progrun_deb(
   .clock(CLOCK_100MHZ),
   .clken(clken_1khz),
+  .reset(CLR),
   .in(SW[14]),
   .out(PROG) );
 
@@ -74,12 +85,16 @@ singlestep_deb(
   .out_rise(man_clken),
   .out_fall(man_clken_oop) );
 
+wire writepress;
+
 debounce
 readwrite_deb(
   .clock(CLOCK_100MHZ),
   .clken(clken_1khz),
   .in(btnC),
-  .out(WRITE) );
+  .out(writepress) );
+  
+assign WRITE = PROG & writepress;
 
 reg [3:0] ADDR;
 wire NEXTUP, NEXTDOWN;
@@ -123,13 +138,31 @@ always @(posedge CLOCK_100MHZ or posedge CLR)
 //assign LED[13] = SAP.mem.write;
 //assign LED[7:0] = SAP.mem.data_in[7:0];
 
+wire [7:0] out;
+wire [15:0] word;
+
+//assign word = PROG ? {ADDR, 4'b0, pad_byte} : out;
+//assign word = {SAP.control.T, SAP.control.cword};
+assign word = {
+        //2'b0, PROG, WRITE,
+        //3'b0, SAP.mem.here,
+        encount,  
+        //SAP.control.T[3:0], // 5 bit -> 4 
+        //SAP.pc_value,
+        //SAP.control.cword
+        //SAP.mar_value,
+        //SAP.mem_value,
+        out
+       };
+        
+
 
 hexout 
 display(
   .clk(CLOCK_100MHZ),
   .clken(clken_1khz),
   .reset(CLR),
-  .word({ADDR, 4'b0, pad_byte}),
+  .word(word),
   .seg(SEG),
   .an(AN),
   .dp(DP)
@@ -141,9 +174,9 @@ reg RUN;
 always @(posedge CLOCK_100MHZ)
 begin
   if (hlt)
-    RUN <= 0;
+    RUN <= 1'b0;
   else if (CLR)
-    RUN <= 1;
+    RUN <= 1'b1;
 end
 
 wire [15:0] pad_value;
@@ -203,16 +236,14 @@ always @(posedge CLOCK_100MHZ or posedge CLR)
   end
 
 
-wire clken, clken_oop;
+
 
 assign clken = (clken_1khz & AUTO) | (man_clken & MANUAL);
 assign clken_oop = (clken_1khz_oop & AUTO) | (man_clken_oop & MANUAL);
 
 // Instantiate the sap1 core, connect to board 
-assign LED[15] = RUN;
-assign LED[14] = CLOCK_100MHZ;
-assign LED[13] = clock_1khz;
 
+assign LED[7:0] = out;
 
 
 
@@ -225,11 +256,11 @@ sap1 SAP(
    .halt(hlt),
    .fp_write(WRITE),
    .fp_adr(ADDR),
-   .fp_data(pad_byte),
+   .fp_data( 8'h6E ),//pad_byte),
    .w_bus(bus),
-   //.o_out(LED[7:0]),
-   .eo_sel(SW[13:12])
-   //.extra_out(LED[15:8]) 
+   .o_out(out),
+   .eo_sel(SW[13:12]),
+   .extra_out(extra_out) 
    );
 
 endmodule

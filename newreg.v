@@ -12,14 +12,13 @@ module newregister
 );
 
 always @(posedge sysclk or posedge reset)
-if (reset)
+if (reset) begin
     value <= 0;
-else if (clken)
-  begin
+end else if (clken) begin
     if (load)
       value <= data_in;
     else
       value <= value;
-  end
+end
 
 endmodule
