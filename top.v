@@ -7,10 +7,10 @@ module top(
   input wire btnR,  // Step
   input wire btnU,
   input wire btnD,
-  output wire [15:0] LED, // the sixteen LEDs
-  output wire [6:0] SEG,
-  output wire [3:0] AN,
-  //output wire DP,
+  // output wire [15:0] LED, // the sixteen LEDs (unused)
+  output wire [6:0] SEG, 
+  output wire [3:0] AN,  
+  //output wire DP,      // Decimal Point, unused
   inout wire [7:0] JB // some are in, some are out
 );
 
@@ -27,6 +27,9 @@ wire clken_1khz_oop; // out of phase
 wire clock_1khz;
 wire clken, clken_oop;
 wire [7:0] extra_out;
+
+reg [7:0] pad_byte;
+reg [3:0] ADDR;
 
 clocken
 clockenable1(
@@ -93,7 +96,6 @@ readwrite_deb(
   
 assign WRITE = PROG & writepress;
 
-reg [3:0] ADDR;
 wire NEXTUP, NEXTDOWN;
 debounce
 nextadr_deb(
@@ -115,8 +117,6 @@ prevadr_deb(
   .out_fall(PREVDOWN) );
 
 
-reg [7:0] pad_byte;
-
 always @(posedge CLOCK_100MHZ)
   if (CLR)
      ADDR <= SW[11:8];
@@ -130,34 +130,12 @@ always @(posedge CLOCK_100MHZ)
   end
 
 
-//assign LED[15] = writepress;
-//assign LED[15:8] = SAP.fp_data;
-//assign LED[15:0] = {ADDR[3:0], 4'b0, pad_byte};
-//assign LED[7:0] = bus[7:0];
-//assign LED[15:8] = pad_byte[7:0];
-assign LED[15:8] = SAP.mem.data_in[7:0];
-//assign LED[15:8] = extra_out;
-//assign LED[13] = SAP.mem.write;
-//assign LED[14] = SAP.mem.here;
-//assign LED[15] = SAP.fp_write;
+//assign LED[15:8] = SAP.mem.data_in[7:0];
 
 wire [7:0] out;
 wire [15:0] word;
 
 assign word = PROG ? {ADDR, 4'b0, pad_byte} : out;
-//assign word = {
-//        //2'b0, PROG, WRITE,
-//        //3'b0, SAP.mem.here,
-//        //encount,  
-//        SAP.control.T[3:0], // 5 bit -> 4 
-//        //SAP.pc_value,
-//        //SAP.control.cword
-//        SAP.mar_value,
-//        //SAP.mem_value,
-//        out
-//       };
-        
-
 
 hexout 
 display(
@@ -245,7 +223,7 @@ assign clken_oop = (clken_1khz_oop & AUTO) | (man_clken_oop & MANUAL);
 
 // Instantiate the sap1 core, connect to board 
 
-assign LED[7:0] = out;
+//assign LED[7:0] = out;
 
 
 
