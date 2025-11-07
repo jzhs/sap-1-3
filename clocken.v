@@ -1,8 +1,9 @@
-
+`timescale 1ns / 1ps
 module clocken
 #(parameter DIVISOR = 50000)
 (
   input wire sysclk,
+  input wire reset,
   output reg clken,  // rising slowclk
   output reg clken2, // falling slowclk
   output reg slowclk
@@ -21,14 +22,11 @@ module clocken
 localparam COUNTER_BITS = $clog2(DIVISOR);
 reg [COUNTER_BITS - 1 : 0] count;
 
-initial
-begin
-  count = 0;
-end
-
 
 always @(posedge sysclk) begin
-  if (count == DIVISOR-1) begin
+  if (reset)
+    count = 0;
+  else if (count == DIVISOR-1) begin
     count <= 0;
     clken <= 1;
     slowclk <= 1;
@@ -36,8 +34,7 @@ always @(posedge sysclk) begin
     slowclk <= 0; 
     clken2 <= 1;
     count <= count+1;
-  end else
-  begin
+  end else begin
     count <= count+1;
     clken <= 0;
     clken2 <= 0;

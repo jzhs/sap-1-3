@@ -56,15 +56,16 @@ mar(
 wire mem_en;
 wire [7:0] mem_value;
 
-memory
+RAM
+#(.ADDR_WIDTH(4))
 mem (
-  .sysclk(sysclk),
-  .clken(clken_oop),
-  .reset(fp_clear),
-  .write(fp_write),
-  .adr((fp_prog) ?  fp_adr : mar_value),
+  .clk(sysclk),
+  //.clken(clken_oop),
+  //.reset(fp_clear),
+  .rw(fp_write),
+  .addr((fp_prog) ?  fp_adr : mar_value),
   .data_in(fp_data),
-  .value(mem_value) );
+  .data_out(mem_value) );
 
 assign w_bus = (mem_en | fp_prog) ? mem_value : 8'bZZZZZZZZ;
 
@@ -151,7 +152,7 @@ controlunit control(
    .clken(clken),
    .clken_oop(clken_oop),
    .clear(fp_clear),
-   .ir(ir_value),
+   .ir_opc(ir_value[7:4]),
    .cword(cword),
    .halt(halt)
    );
@@ -174,7 +175,7 @@ assign sub = cword[0];
 always @(posedge sysclk)
 begin
     case (eo_sel)
-      2'b00 : extra_out <= {3'b000, control.T};
+      2'b00 : extra_out <= {7'b0, fp_write};
       2'b01 : extra_out <= {4'b0000, pc_value};
       2'b10 : extra_out <= mem_value;
       2'b11 : extra_out <=  ir_value; //{4'b0, fp_adr}; //{4'b000000, clken, clken_oop, halt, fp_clear};

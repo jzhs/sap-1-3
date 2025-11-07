@@ -31,7 +31,7 @@ reg [COUNTER_BITS - 1 : 0] counter;
 
 
     
-always @(posedge clock or posedge reset)
+always @(posedge clock)
 if (reset) begin
   counter = 0;
   out = 0;

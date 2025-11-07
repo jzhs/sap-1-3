@@ -7,8 +7,8 @@ module hexout(
   input wire reset,
   input wire [15:0] word,
   output reg [6:0] seg,
-  output reg [3:0] an,
-  output wire dp
+  output reg [3:0] an
+  //output wire dp
 );
 
 
