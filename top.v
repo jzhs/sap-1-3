@@ -5,16 +5,14 @@ module top(
   input wire btnC,  // Write
   input wire btnL,  // Clear
   input wire btnR,  // Step
-  input wire btnU,
-  input wire btnD,
-  // output wire [15:0] LED, // the sixteen LEDs (unused)
+  input wire btnU,  // ADR--
+  input wire btnD,  // ADR++
   output wire [6:0] SEG, 
   output wire [3:0] AN,  
   //output wire DP,      // Decimal Point, unused
   inout wire [7:0] JB // some are in, some are out
 );
 
-//reg [7:0] encount;
 wire CLOCK_1KHZ;
 wire CLR;
 wire CLOCK_MANUAL; // Manual clock (single step)
@@ -27,7 +25,6 @@ wire clken_1khz_oop; // out of phase
 wire clock_1khz;
 wire clken, clken_oop;
 wire [7:0] extra_out;
-
 reg [7:0] pad_byte;
 reg [3:0] ADDR;
 
@@ -39,7 +36,6 @@ clockenable1(
   .clken2(clken_1khz_oop),
   .slowclk(clock_1khz) );
  
-
 wire MANUAL, AUTO;
 assign MANUAL = SW[15];
 //debounce
@@ -52,8 +48,6 @@ assign MANUAL = SW[15];
 
 assign AUTO = ~MANUAL;
 
-
-
 wire PROG;
 debounce
 progrun_deb(
@@ -62,7 +56,6 @@ progrun_deb(
   .reset(CLR),
   .in(SW[14]),
   .out(PROG) );
-
 
 debounce
 clear_deb(
@@ -129,8 +122,6 @@ always @(posedge CLOCK_100MHZ)
      ADDR = ADDR - 1;
   end
 
-
-//assign LED[15:8] = SAP.mem.data_in[7:0];
 
 wire [7:0] out;
 wire [15:0] word;
@@ -216,16 +207,10 @@ always @(posedge CLOCK_100MHZ)
   end
 
 
-
-
 assign clken = (clken_1khz & AUTO) | (man_clken & MANUAL);
 assign clken_oop = (clken_1khz_oop & AUTO) | (man_clken_oop & MANUAL);
 
 // Instantiate the sap1 core, connect to board 
-
-//assign LED[7:0] = out;
-
-
 
 sap1 SAP(
    .sysclk(CLOCK_100MHZ),

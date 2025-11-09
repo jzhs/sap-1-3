@@ -1,6 +1,17 @@
 # sap-1-3
-add hex i/o to sap project
 
+
+
+
+
+# add hex i/o to sap project
+
+  Using PMOD keypad
+  https://github.com/mseminatore/fpgacoding/tree/master/examples/pmod_keypad
+
+  https://left.engr.usu.edu/courses/3700/assignments/2_rtl/1_state_machines/1_keypad/assigned_tasks.html
+
+https://www.youtube.com/watch?v=RMM7maqWgSQ
 
 # New programming scheme
 
