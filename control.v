@@ -1,6 +1,9 @@
+`timescale 1ns/1ps
+`default_nettype none
+
 module controlunit(
   input wire sysclk,
-  input wire clken,
+  //input wire clken,
   input wire clken_oop,
   input wire [3:0] ir_opc,
   input wire clear,

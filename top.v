@@ -2,6 +2,7 @@
 module top(
   input wire CLOCK_100MHZ, 
   input wire [15:8] SW,  // the sixteen (now 8) switches
+  output wire [15:0] LED,
   input wire btnC,  // Write
   input wire btnL,  // Clear
   input wire btnR,  // Step
@@ -11,6 +12,7 @@ module top(
   output wire [3:0] AN,  
   //output wire DP,      // Decimal Point, unused
   inout wire [7:0] JB // some are in, some are out
+  
 );
 
 wire CLOCK_1KHZ;
@@ -27,6 +29,9 @@ wire clken, clken_oop;
 wire [7:0] extra_out;
 reg [7:0] pad_byte;
 reg [3:0] ADDR;
+
+assign LED[15:8] = extra_out;
+assign LED[7:0] = bus;
 
 clocken
 clockenable1(
@@ -55,7 +60,9 @@ progrun_deb(
   .clken(clken_1khz),
   .reset(CLR),
   .in(SW[14]),
-  .out(PROG) );
+  .out(PROG),
+  .out_rise(),
+  .out_fall() );
 
 debounce
 clear_deb(
@@ -63,7 +70,9 @@ clear_deb(
   .reset(CLR),
   .clken(clken_1khz),
   .in(btnL),
-  .out(CLR) );
+  .out(CLR),
+  .out_rise(),
+  .out_fall() );
 
 wire man_clken, man_clken_oop;
 
@@ -85,7 +94,9 @@ readwrite_deb(
   .reset(CLR),
   .clken(clken_1khz),
   .in(btnC),
-  .out(writepress) );
+  .out(writepress),
+  .out_rise(),
+  .out_fall() );
   
 assign WRITE = PROG & writepress;
 
@@ -96,6 +107,7 @@ nextadr_deb(
   .reset(CLR),
   .clken(clken_1khz),
   .in(btnD),
+  .out(),
   .out_rise(NEXTUP),
   .out_fall(NEXTDOWN) );
 
@@ -106,6 +118,7 @@ prevadr_deb(
   .reset(CLR),
   .clken(clken_1khz),
   .in(btnU),
+  .out(),
   .out_rise(PREVUP),
   .out_fall(PREVDOWN) );
 
@@ -171,6 +184,7 @@ keypress_deb(
   .clken(clken_1khz),
   .reset(CLR),
   .in(key),
+  .out(),
   .out_rise(keypress),
   .out_fall(keyrelease) );
   

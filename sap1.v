@@ -149,7 +149,7 @@ wire sub;
 
 controlunit control(
    .sysclk(sysclk),
-   .clken(clken),
+   //.clken(),  // unused
    .clken_oop(clken_oop),
    .clear(fp_clear),
    .ir_opc(ir_value[7:4]),

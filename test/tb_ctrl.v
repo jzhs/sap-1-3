@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 `default_nettype none
 
 
@@ -32,7 +33,9 @@ end
 
 
 
-reg [7:0] ir;
+reg [3:0] ir_opc;
+wire [11:0] cword;
+wire halt;
 
 wire [3:0] CU_counter = CU.T;
 wire [11:0] cword = CU.cword;
@@ -48,18 +51,12 @@ wire a_load;
 
 controlunit CU(
   .sysclk(sysclk),
-  .clken(clken),
+  //.clken(clken),
   .clken_oop(clken_oop),
   .clear(clear),
-  .ir(ir),
-  .pc_en(pc_en),
-  .pc_incr(pc_incr),
-  .mar_load(mar_load),
-  .ir_en(ir_en),
-  .ir_load(ir_load),
-  .mem_en(mem_en),
-  .a_en(a_en),
-  .a_load(a_load)
+  .ir_opc(ir_opc),
+  .cword(cword),
+  .halt(halt)
 );
 
 wire [5:0] T = CU.T;
@@ -72,7 +69,7 @@ initial begin
    #1;
    clear = 0;
    #1;
-   ir = 8'b00001001;
+   ir_opc = 4'b0000;
    
    #200;
    $finish;  
