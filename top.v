@@ -1,4 +1,7 @@
+
 `timescale 1ns / 1ps
+`default_nettype none 
+
 module top(
   input wire CLOCK_100MHZ, 
   input wire [15:8] SW,  // the sixteen (now 8) switches

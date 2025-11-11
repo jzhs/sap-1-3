@@ -1,4 +1,8 @@
+
 `timescale 1ns / 1ps
+`default_nettype none
+
+
 // When input differs from the current output, increment the counter. 
 // When counter hits max go ahead and change the output.
 // The input has to be different from current output "for

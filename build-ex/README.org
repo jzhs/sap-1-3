@@ -1,0 +1,26 @@
+
+These are some basic batch files etc to script the operation of
+vivado. In other words, from the command line you can simulate,
+synthesize, implement, and write to the Basys3 fpga. A lot more could
+be done here but I'm not going to do it now.
+
+Basic use is to copy and re3name the directory sap-1-3/build-ex to a place
+parallel to sap-1-3. Eg build-sap-1-3. So now sap-1-3 and
+build-sap-1-3 have the same parent.
+
+
+
+1. Run testbench simulations
+   > sim.bat
+
+   Runs xvlog, then xelab, then xsim. Ends by opening vivado gui so I
+   can see the waveform. Basic information from:
+   https://www.itsembedded.com/dhd/vivado_sim_1/
+
+2. Make bitstream
+   > makebits.bat
+
+3. Program the board
+   > prog.bat
+   
+

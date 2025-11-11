@@ -1,5 +1,6 @@
 // Display a byte on 7-segment display
-
+`timescale 1ns / 1ps
+`default_nettype none
 
 module hexout(
   input wire clk,

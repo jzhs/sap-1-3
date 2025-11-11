@@ -2,6 +2,9 @@
 
 // Drive column pin low and read row pins.
 
+`timescale 1ns / 1ps
+`default_nettype none
+
 module pmod_hexpad(
   input wire clk,      // 100 MHz
   input wire reset,

@@ -3,6 +3,8 @@
 // It is instantiated in top.v for actual devboard use, and in tb.v for
 // simulation.
 
+
+`timescale 1ns / 1ps
 `default_nettype none 
 
 module sap1(
